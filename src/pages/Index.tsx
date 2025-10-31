@@ -7,7 +7,7 @@ import { CreateEventDialog } from "@/components/CreateEventDialog";
 import { EventCard } from "@/components/EventCard";
 import { EventDetailDialog } from "@/components/EventDetailDialog";
 import { Event } from "@/types/event";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -21,12 +21,7 @@ const Index = () => {
   const { data: events, isLoading, error } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true });
-
-      if (error) throw error;
+      const data = await apiClient.get('/api/events');
       return data as Event[];
     },
   });

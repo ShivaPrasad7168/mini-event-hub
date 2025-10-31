@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const eventSchema = z.object({
@@ -35,6 +35,7 @@ const eventSchema = z.object({
     message: "Event date must be in the future",
   }),
   max_participants: z.coerce.number().min(1, "Must have at least 1 participant").max(1000),
+  category: z.string().optional(),
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
@@ -52,23 +53,20 @@ export const CreateEventDialog = () => {
       location: "",
       date: "",
       max_participants: 10,
+      category: "",
     },
   });
 
   const createEventMutation = useMutation({
     mutationFn: async (values: EventFormValues) => {
-      const { data, error } = await supabase.from("events").insert([
-        {
-          title: values.title,
-          description: values.description,
-          location: values.location,
-          date: values.date,
-          max_participants: values.max_participants,
-          current_participants: 0,
-        },
-      ]).select().single();
-
-      if (error) throw error;
+      const data = await apiClient.post('/api/events', {
+        title: values.title,
+        description: values.description,
+        location: values.location,
+        date: values.date,
+        maxParticipants: values.max_participants,
+        category: values.category,
+      });
       return data;
     },
     onSuccess: () => {
@@ -177,6 +175,22 @@ export const CreateEventDialog = () => {
                   </FormControl>
                   <FormDescription>
                     How many people can join this event?
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Tech, Music, Sports" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Optional category for your event
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

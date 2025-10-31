@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Event } from "@/types/event";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EditEventDialog } from "./EditEventDialog";
 
@@ -46,26 +46,7 @@ export const EventDetailDialog = ({
 
   const joinEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
-      const { data: currentEvent, error: fetchError } = await supabase
-        .from("events")
-        .select("*")
-        .eq("id", eventId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      if (currentEvent.current_participants >= currentEvent.max_participants) {
-        throw new Error("Event is full");
-      }
-
-      const { error: updateError } = await supabase
-        .from("events")
-        .update({
-          current_participants: currentEvent.current_participants + 1,
-        })
-        .eq("id", eventId);
-
-      if (updateError) throw updateError;
+      await apiClient.put(`/api/events/${eventId}/join`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -86,12 +67,7 @@ export const EventDetailDialog = ({
 
   const deleteEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
-      const { error } = await supabase
-        .from("events")
-        .delete()
-        .eq("id", eventId);
-
-      if (error) throw error;
+      await apiClient.delete(`/api/events/${eventId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });

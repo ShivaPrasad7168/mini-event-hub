@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Event } from "@/types/event";
 import { format } from "date-fns";
@@ -36,6 +36,7 @@ const eventSchema = z.object({
     message: "Event date must be in the future",
   }),
   max_participants: z.coerce.number().min(1, "Must have at least 1 participant").max(1000),
+  category: z.string().optional(),
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
@@ -58,6 +59,7 @@ export const EditEventDialog = ({ event, open, onOpenChange }: EditEventDialogPr
       location: "",
       date: "",
       max_participants: 10,
+      category: "",
     },
   });
 
@@ -72,6 +74,7 @@ export const EditEventDialog = ({ event, open, onOpenChange }: EditEventDialogPr
         location: event.location,
         date: formattedDate,
         max_participants: event.max_participants,
+        category: event.category || "",
       });
     }
   }, [event, form]);
@@ -87,20 +90,14 @@ export const EditEventDialog = ({ event, open, onOpenChange }: EditEventDialogPr
         );
       }
 
-      const { data, error } = await supabase
-        .from("events")
-        .update({
-          title: values.title,
-          description: values.description,
-          location: values.location,
-          date: values.date,
-          max_participants: values.max_participants,
-        })
-        .eq("id", event.id)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await apiClient.put(`/api/events/${event.id}`, {
+        title: values.title,
+        description: values.description,
+        location: values.location,
+        date: values.date,
+        maxParticipants: values.max_participants,
+        category: values.category,
+      });
       return data;
     },
     onSuccess: () => {
@@ -207,6 +204,22 @@ export const EditEventDialog = ({ event, open, onOpenChange }: EditEventDialogPr
                   </FormControl>
                   <FormDescription>
                     Must be at least {event.current_participants} (current participants)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Tech, Music, Sports" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Optional category for your event
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

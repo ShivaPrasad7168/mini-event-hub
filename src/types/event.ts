@@ -8,6 +8,7 @@ export interface Event {
   date: string;
   max_participants: number;
   current_participants: number;
+  category?: string;
   created_at: string;
   updated_at: string;
 }
@@ -20,4 +21,5 @@ export interface CreateEventInput {
   longitude?: number;
   date: string;
   max_participants: number;
+  category?: string;
 }
