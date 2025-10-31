@@ -1,4 +1,5 @@
-import { Calendar, MapPin, Users, Clock } from "lucide-react";
+import { useState } from "react";
+import { Calendar, MapPin, Users, Clock, Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -6,6 +7,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Event } from "@/types/event";
@@ -13,6 +24,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { EditEventDialog } from "./EditEventDialog";
 
 interface EventDetailDialogProps {
   event: Event | null;
@@ -29,6 +41,8 @@ export const EventDetailDialog = ({
 }: EventDetailDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const joinEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
@@ -65,6 +79,33 @@ export const EventDetailDialog = ({
       toast({
         title: "Error",
         description: error.message || "Failed to join event. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", eventId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      toast({
+        title: "Event deleted",
+        description: "The event has been successfully deleted.",
+      });
+      setShowDeleteDialog(false);
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete event. Please try again.",
         variant: "destructive",
       });
     },
@@ -138,28 +179,78 @@ export const EventDetailDialog = ({
               </div>
             </div>
           </div>
-          <div className="flex gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-            >
-              Close
-            </Button>
-            <Button
-              onClick={() => joinEventMutation.mutate(event.id)}
-              disabled={isFull || joinEventMutation.isPending}
-              className="flex-1 bg-gradient-to-r from-primary to-secondary"
-            >
-              {joinEventMutation.isPending
-                ? "Joining..."
-                : isFull
-                ? "Event Full"
-                : "Join Event"}
-            </Button>
+          <div className="space-y-3 pt-4">
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowEditDialog(true)}
+                className="flex-1"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(true)}
+                className="flex-1 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1"
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => joinEventMutation.mutate(event.id)}
+                disabled={isFull || joinEventMutation.isPending}
+                className="flex-1 bg-gradient-to-r from-primary to-secondary"
+              >
+                {joinEventMutation.isPending
+                  ? "Joining..."
+                  : isFull
+                  ? "Event Full"
+                  : "Join Event"}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
+
+      {/* Edit Dialog */}
+      <EditEventDialog
+        event={event}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the event
+              "{event.title}" and remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteEventMutation.mutate(event.id)}
+              disabled={deleteEventMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteEventMutation.isPending ? "Deleting..." : "Delete Event"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
