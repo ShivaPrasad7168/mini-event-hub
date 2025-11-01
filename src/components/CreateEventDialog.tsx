@@ -65,7 +65,7 @@ export const CreateEventDialog = () => {
         location: values.location,
         date: values.date,
         maxParticipants: values.max_participants,
-        category: values.category,
+        category: values.category || undefined,
       });
       return data;
     },
@@ -99,7 +99,7 @@ export const CreateEventDialog = () => {
           Create Event
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
           <DialogDescription>
@@ -130,7 +130,7 @@ export const CreateEventDialog = () => {
                   <FormControl>
                     <Textarea
                       placeholder="Describe your event..."
-                      className="resize-none"
+                      className="resize-none min-h-[80px]"
                       {...field}
                     />
                   </FormControl>
@@ -138,19 +138,34 @@ export const CreateEventDialog = () => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="San Francisco, CA" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input placeholder="San Francisco, CA" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Tech, Music..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="date"
@@ -175,22 +190,6 @@ export const CreateEventDialog = () => {
                   </FormControl>
                   <FormDescription>
                     How many people can join this event?
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Tech, Music, Sports" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Optional category for your event
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

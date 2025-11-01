@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, MapPin, Users, Clock, Pencil, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Pencil, Trash2, Tag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -89,12 +89,12 @@ export const EventDetailDialog = ({
 
   if (!event) return null;
 
-  const spotsLeft = event.max_participants - event.current_participants;
+  const spotsLeft = Math.max(0, event.max_participants - event.current_participants);
   const isFull = spotsLeft === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <DialogTitle className="text-2xl pr-8">{event.title}</DialogTitle>
@@ -154,6 +154,17 @@ export const EventDetailDialog = ({
                 </p>
               </div>
             </div>
+            {event.category && (
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
+                <Tag className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium">Category</p>
+                  <Badge variant="outline" className="mt-1">
+                    {event.category}
+                  </Badge>
+                </div>
+              </div>
+            )}
           </div>
           <div className="space-y-3 pt-4">
             <div className="flex gap-3">

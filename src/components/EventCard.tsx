@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Users } from "lucide-react";
+import { Calendar, MapPin, Users, Tag } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Event } from "@/types/event";
@@ -11,11 +11,11 @@ interface EventCardProps {
 }
 
 export const EventCard = ({ event, onClick, distance }: EventCardProps) => {
-  const spotsLeft = event.max_participants - event.current_participants;
+  const spotsLeft = Math.max(0, event.max_participants - event.current_participants);
   const isFull = spotsLeft === 0;
 
   return (
-    <Card 
+    <Card
       className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group"
       onClick={onClick}
       style={{ boxShadow: "var(--shadow-card)" }}
@@ -55,6 +55,14 @@ export const EventCard = ({ event, onClick, distance }: EventCardProps) => {
             {event.current_participants} / {event.max_participants} participants
           </span>
         </div>
+        {event.category && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Tag className="h-4 w-4" />
+            <Badge variant="outline" className="text-xs">
+              {event.category}
+            </Badge>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

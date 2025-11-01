@@ -60,9 +60,9 @@ app.post('/api/events', (req, res) => {
     description,
     location,
     date,
-    maxParticipants: parseInt(maxParticipants),
-    currentParticipants: 0,
-    category,
+    max_participants: parseInt(maxParticipants),
+    current_participants: 0,
+    category: category || null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -80,11 +80,11 @@ app.put('/api/events/:id/join', (req, res) => {
     return res.status(404).json({ error: 'Event not found' });
   }
 
-  if (event.currentParticipants >= event.maxParticipants) {
+  if (event.current_participants >= event.max_participants) {
     return res.status(400).json({ error: 'Event is full' });
   }
 
-  event.currentParticipants += 1;
+  event.current_participants += 1;
   event.updated_at = new Date().toISOString();
 
   res.json(event);
@@ -104,7 +104,7 @@ app.put('/api/events/:id', (req, res) => {
   const event = events[eventIndex];
 
   // Validation
-  if (maxParticipants && maxParticipants < event.currentParticipants) {
+  if (maxParticipants && maxParticipants < event.current_participants) {
     return res.status(400).json({ error: 'maxParticipants cannot be less than current participants' });
   }
 
@@ -112,7 +112,7 @@ app.put('/api/events/:id', (req, res) => {
   if (description) event.description = description;
   if (location) event.location = location;
   if (date) event.date = date;
-  if (maxParticipants) event.maxParticipants = parseInt(maxParticipants);
+  if (maxParticipants) event.max_participants = parseInt(maxParticipants);
   if (category !== undefined) event.category = category;
 
   event.updated_at = new Date().toISOString();
